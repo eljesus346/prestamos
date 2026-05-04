@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préstamos | Sistema de Préstamos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">🖥️ Sistema de Préstamos</div>
+        <div class="navbar-links">
+            <a href="index.html">Dashboard</a>
+            <a href="usuarios.html">Usuarios</a>
+            <a href="equipos.html">Equipos</a>
+            <a href="prestamos.html" class="active">Préstamos</a>
+            <a href="historial.html">Historial</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="page-header">
+            <h1>🔄 Gestión de Préstamos</h1>
+            <button class="btn btn-primary" onclick="abrirModal()">+ Nuevo Préstamo</button>
+        </div>
+
+        <div class="filtros-bar">
+            <input type="text" id="buscador"
+                   placeholder="🔍 Buscar por usuario o equipo..."
+                   oninput="filtrarPrestamos()">
+            <select id="filtroEstado" onchange="filtrarPrestamos()">
+                <option value="">Todos los estados</option>
+                <option value="asignado">🟡 Asignado</option>
+                <option value="prestado">🔵 Prestado</option>
+                <option value="devuelto">🟢 Devuelto</option>
+                <option value="atrasado">🔴 Atrasado</option>
+                <option value="dañado">⚠️ Dañado</option>
+                <option value="perdido">❌ Perdido</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="tabla-scroll">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Usuario</th>
+                            <th>Equipo</th>
+                            <th>Tipo</th>
+                            <th>Código / Serial</th>
+                            <th>Fecha Préstamo</th>
+                            <th>Devolución Est.</th>
+                            <th>Estado</th>
+                            <th>Firmas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla">
+                        <tr><td colspan="10" class="text-center">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         MODAL NUEVO PRÉSTAMO
+    ═══════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Nuevo Préstamo</h2>
+                <button class="modal-close" onclick="cerrarModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="formPrestamo">
+                    <input type="hidden" id="prestamoId">
+
+                    <div class="form-grid">
+
+                        <!-- Usuario — al cambiar consulta tipos bloqueados -->
+                        <div class="form-group">
+                            <label>👤 Usuario *</label>
+                            <select id="id_usuario" required onchange="onUsuarioCambio()">
+                                <option value="">Selecciona un usuario...</option>
+                            </select>
+                        </div>
+
+                        <!-- Equipo — se agrupa en disponibles / bloqueados -->
+                        <div class="form-group">
+                            <label>💻 Equipo *</label>
+                            <select id="id_equipo" required>
+                                <option value="">Selecciona un equipo...</option>
+                            </select>
+                        </div>
+
+                        <!-- Aviso de tipos bloqueados (oculto por defecto) -->
+                        <div id="avisoTiposBloqueados"
+                             class="alerta-item alerta-warning"
+                             style="display:none; grid-column: span 2; margin:0; gap:10px">
+                        </div>
+
+                        <div class="form-group">
+                            <label>📅 Fecha estimada de devolución</label>
+                            <input type="date" id="fecha_devolucion_estimada">
+                        </div>
+
+                        <div class="form-group">
+                            <label>📝 Observaciones</label>
+                            <input type="text" id="observaciones"
+                                   placeholder="Estado del equipo al entregar...">
+                        </div>
+
+                    </div>
+
+                    <!-- Firma de entrega -->
+                    <div class="firma-section">
+                        <label class="firma-label">✍️ Firma de entrega *</label>
+                        <div class="firma-container">
+                            <canvas id="firmaCanvas" width="550" height="160"></canvas>
+                        </div>
+                        <div class="firma-acciones">
+                            <button type="button" class="btn btn-secondary btn-sm"
+                                    onclick="limpiarFirma()">🗑️ Limpiar</button>
+                            <span class="firma-hint">El receptor firma aquí al recibir el equipo</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">💾 Registrar Préstamo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         MODAL VER FIRMA
+    ═══════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modalFirma">
+        <div class="modal" style="max-width:480px">
+            <div class="modal-header">
+                <h2 id="firmaModalTitulo">✍️ Firma</h2>
+                <button class="modal-close" onclick="cerrarFirma()">✕</button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagenFirma" src="" alt="Firma"
+                     style="max-width:100%; border:1px solid #e2e8f0; border-radius:8px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         MODAL DEVOLUCIÓN
+    ═══════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modalDevolucion">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h2>✅ Registrar Devolución</h2>
+                <button class="modal-close" onclick="cerrarDevolucion()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="devId">
+
+                <div class="devolucion-info">
+                    <strong>👤 Usuario:</strong> <span id="devUsuario"></span><br>
+                    <strong>💻 Equipo:</strong> <span id="devEquipo"></span>
+                </div>
+
+                <div class="form-group" style="margin-bottom:16px">
+                    <label>📝 Observaciones de devolución</label>
+                    <textarea id="devObservaciones" rows="2"
+                              placeholder="Estado del equipo al devolver, accesorios entregados...">
+                    </textarea>
+                </div>
+
+                <div class="firma-section">
+                    <label class="firma-label">✍️ Firma de devolución *</label>
+                    <div class="firma-container">
+                        <canvas id="firmaDevCanvas" width="550" height="150"></canvas>
+                    </div>
+                    <div class="firma-acciones">
+                        <button type="button" class="btn btn-secondary btn-sm"
+                                onclick="limpiarFirmaDev()">🗑️ Limpiar</button>
+                        <span class="firma-hint">El receptor firma aquí para confirmar la devolución</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary"
+                            onclick="cerrarDevolucion()">Cancelar</button>
+                    <button class="btn btn-success"
+                            onclick="confirmarDevolucion()">✅ Confirmar devolución</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/prestamos.js"></script>
+</body>
+</html>

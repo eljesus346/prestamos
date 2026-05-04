@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial | Sistema de Préstamos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">🖥️ Sistema de Préstamos</div>
+        <div class="navbar-links">
+            <a href="index.html">Dashboard</a>
+            <a href="usuarios.html">Usuarios</a>
+            <a href="equipos.html">Equipos</a>
+            <a href="prestamos.html">Préstamos</a>
+            <a href="historial.html" class="active">Historial</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="page-header">
+            <h1>📜 Historial y Trazabilidad</h1>
+        </div>
+
+        <!-- ── TABS ── -->
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab('completo')">
+                📋 Historial Completo
+            </button>
+            <button class="tab" onclick="cambiarTab('usuario')">
+                👤 Por Usuario
+            </button>
+            <button class="tab" onclick="cambiarTab('equipo')">
+                💻 Por Equipo
+            </button>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             TAB 1 — HISTORIAL COMPLETO
+        ══════════════════════════════════════════ -->
+        <div id="tab-completo" class="tab-content active">
+
+            <div class="filtros-bar" style="margin-top:16px">
+                <input type="text" id="buscadorCompleto"
+                       placeholder="🔍 Buscar por usuario, documento o equipo..."
+                       oninput="buscarHistorial()">
+                <select id="filtroEstadoCompleto" onchange="filtrarCompleto()">
+                    <option value="">Todos los estados</option>
+                    <option value="asignado">🟡 Asignado</option>
+                    <option value="prestado">🔵 Prestado</option>
+                    <option value="devuelto">🟢 Devuelto</option>
+                    <option value="atrasado">🔴 Atrasado</option>
+                    <option value="dañado">⚠️ Dañado</option>
+                    <option value="perdido">❌ Perdido</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <div class="tabla-scroll">
+                    <table class="tabla">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Usuario</th>
+                                <th>Equipo</th>
+                                <th>Tipo</th>
+                                <th>Código / Serial</th>
+                                <th>Fecha Préstamo</th>
+                                <th>Dev. Estimada</th>
+                                <th>Dev. Real</th>
+                                <th>Estado</th>
+                                <th>Firma</th>
+                                <th>PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoCompleto">
+                            <tr><td colspan="11" class="text-center">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             TAB 2 — POR USUARIO
+        ══════════════════════════════════════════ -->
+        <div id="tab-usuario" class="tab-content">
+
+            <div class="buscar-seccion" style="margin-top:16px">
+                <select id="selectUsuario">
+                    <option value="">Selecciona un usuario...</option>
+                </select>
+                <button class="btn btn-primary"
+                        onclick="cargarHistorialUsuario()">🔍 Ver historial</button>
+            </div>
+
+            <div id="infoUsuario" class="info-card" style="display:none"></div>
+
+            <div id="resultadoUsuario" style="display:none">
+                <div class="card" style="margin-top:16px">
+                    <div class="tabla-scroll">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Equipo</th>
+                                    <th>Tipo</th>
+                                    <th>Serial</th>
+                                    <th>Fecha Préstamo</th>
+                                    <th>Dev. Estimada</th>
+                                    <th>Dev. Real</th>
+                                    <th>Estado</th>
+                                    <th>Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoUsuario"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             TAB 3 — POR EQUIPO
+        ══════════════════════════════════════════ -->
+        <div id="tab-equipo" class="tab-content">
+
+            <div class="buscar-seccion" style="margin-top:16px">
+                <select id="selectEquipo">
+                    <option value="">Selecciona un equipo...</option>
+                </select>
+                <button class="btn btn-primary"
+                        onclick="cargarHistorialEquipo()">🔍 Ver historial</button>
+            </div>
+
+            <div id="infoEquipo" class="info-card" style="display:none"></div>
+
+            <div id="resultadoEquipo" style="display:none">
+                <div class="card" style="margin-top:16px">
+                    <div class="tabla-scroll">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Usuario</th>
+                                    <th>Documento</th>
+                                    <th>Cargo</th>
+                                    <th>Fecha Préstamo</th>
+                                    <th>Dev. Estimada</th>
+                                    <th>Dev. Real</th>
+                                    <th>Estado</th>
+                                    <th>Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoEquipo"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL VER FIRMA -->
+    <div class="modal-overlay" id="modalFirma">
+        <div class="modal" style="max-width:420px">
+            <div class="modal-header">
+                <h2>✍️ Firma del receptor</h2>
+                <button class="modal-close" onclick="cerrarFirma()">✕</button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagenFirma" src="" alt="Firma"
+                     style="max-width:100%;border:1px solid #e2e8f0;border-radius:8px">
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/historial.js"></script>
+</body>
+</html>

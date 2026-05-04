@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios | Sistema de Préstamos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">🖥️ Sistema de Préstamos</div>
+        <div class="navbar-links">
+          <a href="index.html">Dashboard</a>
+          <a href="usuarios.html" class="active">Usuarios</a>
+          <a href="equipos.html">Equipos</a>
+          <a href="prestamos.html">Préstamos</a>
+          <a href="historial.html">Historial</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- ENCABEZADO -->
+        <div class="page-header">
+            <h1>👤 Gestión de Usuarios</h1>
+            <button class="btn btn-primary" onclick="abrirModal()">+ Nuevo Usuario</button>
+        </div>
+
+        <!-- BUSCADOR -->
+        <div class="search-bar">
+            <input type="text" id="buscador" placeholder="🔍 Buscar por nombre o documento..."
+                   oninput="filtrarUsuarios()">
+        </div>
+
+        <!-- TABLA -->
+        <div class="card">
+            <div class="tabla-scroll">
+                <table class="tabla" id="tablaUsuarios">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre</th>
+                            <th>Documento</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th>Cargo</th>
+                            <th>Área</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla">
+                        <tr><td colspan="9" class="text-center">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CREAR / EDITAR -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Nuevo Usuario</h2>
+                <button class="modal-close" onclick="cerrarModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="formUsuario">
+                    <input type="hidden" id="usuarioId">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre completo *</label>
+                            <input type="text" id="nombre" placeholder="Juan Pérez" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Documento (CC) *</label>
+                            <input type="text" id="documento" placeholder="123456789" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" id="telefono" placeholder="3001234567">
+                        </div>
+                        <div class="form-group">
+                            <label>Correo</label>
+                            <input type="email" id="correo" placeholder="juan@empresa.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Cargo</label>
+                            <input type="text" id="cargo" placeholder="Analista">
+                        </div>
+                        <div class="form-group">
+                            <label>Área</label>
+                            <input type="text" id="area" placeholder="Tecnología">
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">💾 Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/usuarios.js"></script>
+</body>
+</html>

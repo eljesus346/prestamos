@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Sistema de Préstamos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">🖥️ Sistema de Préstamos</div>
+        <div class="navbar-links">
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="usuarios.html">Usuarios</a>
+            <a href="equipos.html">Equipos</a>
+            <a href="prestamos.html">Préstamos</a>
+            <a href="historial.html">Historial</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- ENCABEZADO -->
+        <div class="page-header">
+            <h1>📊 Dashboard</h1>
+            <span class="fecha-hoy" id="fechaHoy"></span>
+        </div>
+
+        <!-- FILA 1: STATS PRINCIPALES -->
+        <div class="dash-grid-4">
+            <div class="dash-card dash-blue">
+                <div class="dash-icon">💻</div>
+                <div class="dash-info">
+                    <span class="dash-num" id="totalEquipos">—</span>
+                    <span class="dash-label">Total Equipos</span>
+                </div>
+            </div>
+            <div class="dash-card dash-green">
+                <div class="dash-icon">✅</div>
+                <div class="dash-info">
+                    <span class="dash-num" id="equiposDisponibles">—</span>
+                    <span class="dash-label">Disponibles</span>
+                </div>
+            </div>
+            <div class="dash-card dash-yellow">
+                <div class="dash-icon">🔄</div>
+                <div class="dash-info">
+                    <span class="dash-num" id="prestamosActivos">—</span>
+                    <span class="dash-label">Préstamos Activos</span>
+                </div>
+            </div>
+            <div class="dash-card dash-red">
+                <div class="dash-icon">⏰</div>
+                <div class="dash-info">
+                    <span class="dash-num" id="prestamosAtrasados">—</span>
+                    <span class="dash-label">Atrasados</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILA 2: STATS SECUNDARIAS -->
+        <div class="dash-grid-4" style="margin-top:14px">
+            <div class="dash-card-sm">
+                <span class="dash-sm-label">👥 Usuarios activos</span>
+                <span class="dash-sm-num" id="usuariosActivos">—</span>
+            </div>
+            <div class="dash-card-sm">
+                <span class="dash-sm-label">📦 Total préstamos</span>
+                <span class="dash-sm-num" id="totalPrestamos">—</span>
+            </div>
+            <div class="dash-card-sm">
+                <span class="dash-sm-label">🟢 Devueltos</span>
+                <span class="dash-sm-num" id="prestamosDevueltos">—</span>
+            </div>
+            <div class="dash-card-sm">
+                <span class="dash-sm-label">🔧 En mantenimiento</span>
+                <span class="dash-sm-num" id="equiposMant">—</span>
+            </div>
+        </div>
+
+        <!-- FILA 3: EXPORTAR EXCEL -->
+        <div class="card" style="margin-top:20px;padding:16px 20px">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+                <h3 class="card-title" style="margin:0">📥 Exportar a Excel</h3>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button class="btn btn-success btn-sm"
+                            onclick="exportarExcel('prestamos')">
+                        📄 Préstamos
+                    </button>
+                    <button class="btn btn-success btn-sm"
+                            onclick="exportarExcel('equipos')">
+                        💻 Equipos
+                    </button>
+                    <button class="btn btn-success btn-sm"
+                            onclick="exportarExcel('usuarios')">
+                        👤 Usuarios
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILA 4: GRÁFICAS -->
+        <div class="dash-grid-2" style="margin-top:20px">
+            <div class="card dash-chart-card">
+                <h3 class="card-title">💻 Equipos por tipo</h3>
+                <div class="chart-bars" id="chartBars"></div>
+            </div>
+            <div class="card dash-chart-card">
+                <h3 class="card-title">📅 Préstamos últimos 6 meses</h3>
+                <div class="chart-bars" id="chartMeses"></div>
+            </div>
+        </div>
+
+        <!-- FILA 5: ALERTAS + ÚLTIMOS MOVIMIENTOS -->
+        <div class="dash-grid-2" style="margin-top:20px">
+            <div class="card dash-chart-card">
+                <h3 class="card-title">🔔 Alertas</h3>
+                <div id="alertasContainer">
+                    <p class="text-muted text-center">Cargando...</p>
+                </div>
+            </div>
+            <div class="card dash-chart-card">
+                <h3 class="card-title">🕐 Últimos movimientos</h3>
+                <div id="ultimosMovimientos">
+                    <p class="text-muted text-center">Cargando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILA 6: PRÉSTAMOS ACTIVOS -->
+        <div class="card" style="margin-top:24px">
+            <h3 class="card-title" style="padding:20px 20px 0">
+                🔄 Préstamos activos recientes
+            </h3>
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Usuario</th>
+                        <th>Equipo</th>
+                        <th>Tipo</th>
+                        <th>Fecha Préstamo</th>
+                        <th>Devolución Est.</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoActivos">
+                    <tr><td colspan="8" class="text-center">Cargando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FILA 7: PRÉSTAMOS ATRASADOS -->
+        <div class="card alerta-card" style="margin-top:24px" id="cardAtrasados">
+            <h3 class="card-title alerta-title" style="padding:20px 20px 0">
+                🔴 Préstamos atrasados
+            </h3>
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Usuario</th>
+                        <th>Documento</th>
+                        <th>Equipo</th>
+                        <th>Fecha Préstamo</th>
+                        <th>Debía devolver</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoAtrasados">
+                    <tr><td colspan="7" class="text-center">Sin préstamos atrasados 🎉</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

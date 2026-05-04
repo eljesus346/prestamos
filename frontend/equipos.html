@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipos | Sistema de Préstamos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">🖥️ Sistema de Préstamos</div>
+        <div class="navbar-links">
+            <a href="index.html">Dashboard</a>
+            <a href="usuarios.html">Usuarios</a>
+            <a href="equipos.html" class="active">Equipos</a>
+            <a href="prestamos.html">Préstamos</a>
+            <a href="historial.html">Historial</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="page-header">
+            <h1>💻 Gestión de Equipos</h1>
+            <button class="btn btn-primary" onclick="abrirModal()">+ Nuevo Equipo</button>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filtros-bar">
+            <input type="text" id="buscador"
+                   placeholder="🔍 Buscar por nombre o serial..."
+                   oninput="filtrarEquipos()">
+
+            <select id="filtroEstado" onchange="filtrarEquipos()">
+                <option value="">Todos los estados</option>
+                <option value="disponible">✅ Disponible</option>
+                <option value="prestado">🔵 Prestado</option>
+                <option value="dañado">🔴 Dañado</option>
+                <option value="mantenimiento">🔧 Mantenimiento</option>
+            </select>
+
+            <select id="filtroTipo" onchange="filtrarEquipos()">
+                <option value="">Todos los tipos</option>
+                <option value="laptop">Laptop</option>
+                <option value="mouse">Mouse</option>
+                <option value="teclado">Teclado</option>
+                <option value="diadema">Diadema</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+
+        <!-- CONTADORES -->
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card stat-green">
+                <span class="stat-num" id="cntDisponible">0</span>
+                <span class="stat-label">Disponibles</span>
+            </div>
+            <div class="stat-card stat-blue">
+                <span class="stat-num" id="cntPrestado">0</span>
+                <span class="stat-label">Prestados</span>
+            </div>
+            <div class="stat-card stat-red">
+                <span class="stat-num" id="cntDanado">0</span>
+                <span class="stat-label">Dañados</span>
+            </div>
+            <div class="stat-card stat-yellow">
+                <span class="stat-num" id="cntMantenimiento">0</span>
+                <span class="stat-label">Mantenimiento</span>
+            </div>
+        </div>
+
+        <!-- TABLA -->
+        <div class="card">
+            <div class="tabla-scroll">
+                <table class="tabla" id="tablaEquipos">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Foto / Nombre</th>
+                            <th>Tipo</th>
+                            <th>Serial</th>
+                            <th>Código</th>
+                            <th>Estado</th>
+                            <th>Observaciones</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla">
+                        <tr><td colspan="8" class="text-center">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         MODAL CREAR / EDITAR
+    ══════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Nuevo Equipo</h2>
+                <button class="modal-close" onclick="cerrarModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEquipo">
+                    <input type="hidden" id="equipoId">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre del equipo *</label>
+                            <input type="text" id="nombre"
+                                   placeholder="Laptop Dell Latitude" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo *</label>
+                            <select id="tipo" required>
+                                <option value="">Selecciona un tipo</option>
+                                <option value="laptop">Laptop</option>
+                                <option value="mouse">Mouse</option>
+                                <option value="teclado">Teclado</option>
+                                <option value="diadema">Diadema</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Serial *</label>
+                            <input type="text" id="serial"
+                                   placeholder="DELL-2024-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Código interno</label>
+                            <input type="text" id="codigo_interno"
+                                   placeholder="TEC-001">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Observaciones</label>
+                            <textarea id="observaciones" rows="2"
+                                      placeholder="Estado del equipo, accesorios incluidos..."></textarea>
+                        </div>
+
+                        <!-- ── FOTO DEL EQUIPO ── -->
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>📷 Foto del equipo</label>
+                            <div class="foto-upload-area"
+                                 onclick="document.getElementById('fotoInput').click()">
+                                <input type="file" id="fotoInput" accept="image/*"
+                                       style="display:none"
+                                       onchange="previsualizarFoto(event)">
+                                <div id="fotoPreviewContainer">
+                                    <div id="fotoPlaceholder" class="foto-placeholder">
+                                        <span style="font-size:2rem">📷</span>
+                                        <span>Clic para subir una foto</span>
+                                        <span class="foto-hint">JPG, PNG o WEBP — máx. 2MB</span>
+                                    </div>
+                                    <img id="fotoPreview" src="" alt="Preview"
+                                         style="display:none; max-height:160px;
+                                                border-radius:8px; object-fit:cover;">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm"
+                                    id="btnQuitarFoto"
+                                    style="display:none; margin-top:8px"
+                                    onclick="quitarFoto()">
+                                🗑️ Quitar foto
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                                onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">💾 Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         MODAL VER FOTO EN GRANDE
+    ══════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modalFotoEquipo">
+        <div class="modal" style="max-width:480px">
+            <div class="modal-header">
+                <h2 id="fotoModalNombre">Foto del equipo</h2>
+                <button class="modal-close" onclick="cerrarFotoModal()">✕</button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="fotoModalImg" src="" alt="Foto equipo"
+                     style="max-width:100%; border-radius:10px;
+                            box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/equipos.js"></script>
+</body>
+</html>
