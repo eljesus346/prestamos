@@ -190,25 +190,53 @@ function filtrarPrestamos() {
 // ══════════════════════════════════════════════════════
 
 // Guarda qué tipos ya tiene el usuario seleccionado
-let tiposBloqueados = [];
+let tiposBloqueados      = [];
+let _usuariosDisponibles = []; // lista completa de usuarios activos
 
 async function cargarSelects() {
     // Cargar usuarios activos
     const resU     = await fetch(`${API_URL}/usuarios`);
     const usuarios = await resU.json();
-    const selU     = document.getElementById("id_usuario");
-    selU.innerHTML = '<option value="">Selecciona un usuario...</option>';
-    usuarios.filter(u => u.estado).forEach(u => {
-        selU.innerHTML += `<option value="${u.id}">${u.nombre} — ${u.documento}</option>`;
-    });
+
+    // Guardar solo activos para poder filtrar después
+    _usuariosDisponibles = usuarios.filter(u => u.estado);
+
+    // Limpiar buscador al abrir el modal
+    const buscador = document.getElementById("buscadorUsuario");
+    if (buscador) buscador.value = "";
+
+    renderizarSelectUsuarios(_usuariosDisponibles);
 
     // Cargar equipos disponibles
     const resE    = await fetch(`${API_URL}/equipos/disponibles`);
     const equipos = await resE.json();
-    window._equiposDisponibles = equipos; // guardar para filtrar después
+    window._equiposDisponibles = equipos;
 
     // Renderizar todos por defecto (sin usuario seleccionado aún)
     renderizarSelectEquipos(equipos, []);
+}
+
+// Renderiza el select de usuarios con la lista recibida
+function renderizarSelectUsuarios(lista) {
+    const selU = document.getElementById("id_usuario");
+    selU.innerHTML = '<option value="">Selecciona un usuario...</option>';
+    lista.forEach(u => {
+        selU.innerHTML += `<option value="${u.id}">${u.nombre} — ${u.documento}</option>`;
+    });
+}
+
+// Filtra el select de usuarios según lo escrito en el buscador
+function filtrarUsuariosModal() {
+    const texto     = document.getElementById("buscadorUsuario").value.toLowerCase();
+    const filtrados = _usuariosDisponibles.filter(u =>
+        u.nombre.toLowerCase().includes(texto) ||
+        u.documento.toLowerCase().includes(texto)
+    );
+    renderizarSelectUsuarios(filtrados);
+
+    // Si el usuario seleccionado ya no aparece en la lista filtrada, limpiar aviso
+    const selU = document.getElementById("id_usuario");
+    if (!selU.value) onUsuarioCambio();
 }
 
 // Actualiza el select de equipos marcando/ocultando los bloqueados
@@ -219,8 +247,8 @@ function renderizarSelectEquipos(equipos, bloqueados) {
     selE.innerHTML = '<option value="">Selecciona un equipo...</option>';
 
     // Agrupar: primero disponibles, luego bloqueados al final
-    const disponibles = equipos.filter(e => !tiposBloq.includes(e.tipo));
-    const noDisponibles = equipos.filter(e => tiposBloq.includes(e.tipo));
+    const disponibles   = equipos.filter(e => !tiposBloq.includes(e.tipo));
+    const noDisponibles = equipos.filter(e =>  tiposBloq.includes(e.tipo));
 
     if (disponibles.length > 0) {
         const grupo = document.createElement("optgroup");
@@ -372,9 +400,9 @@ document.getElementById("formPrestamo").addEventListener("submit", async (e) => 
     }
 
     // Validación extra en frontend antes de enviar
-    const idEquipo   = parseInt(document.getElementById("id_equipo").value);
-    const idUsuario  = parseInt(document.getElementById("id_usuario").value);
-    const equipoSel  = (window._equiposDisponibles || []).find(e => e.id === idEquipo);
+    const idEquipo  = parseInt(document.getElementById("id_equipo").value);
+    const idUsuario = parseInt(document.getElementById("id_usuario").value);
+    const equipoSel = (window._equiposDisponibles || []).find(e => e.id === idEquipo);
 
     if (equipoSel && tiposBloqueados.some(b => b.tipo === equipoSel.tipo)) {
         toast(

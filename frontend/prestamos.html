@@ -81,9 +81,14 @@
 
                     <div class="form-grid">
 
-                        <!-- Usuario — al cambiar consulta tipos bloqueados -->
+                        <!-- Usuario — buscador + select filtrado -->
                         <div class="form-group">
                             <label>👤 Usuario *</label>
+                            <input type="text" id="buscadorUsuario"
+                                   placeholder="🔍 Buscar por nombre o documento..."
+                                   oninput="filtrarUsuariosModal()"
+                                   autocomplete="off"
+                                   style="margin-bottom:6px">
                             <select id="id_usuario" required onchange="onUsuarioCambio()">
                                 <option value="">Selecciona un usuario...</option>
                             </select>
