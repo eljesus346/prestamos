@@ -164,7 +164,7 @@
 
     </div>
 
-    <!-- MODAL VER FIRMA -->
+        <!-- MODAL VER FIRMA -->
     <div class="modal-overlay" id="modalFirma">
         <div class="modal" style="max-width:420px">
             <div class="modal-header">
@@ -177,6 +177,41 @@
             </div>
         </div>
     </div>
+
+    <!-- ====================== FOOTER PERSONALIZADO ====================== -->
+    <script>
+        // Cargar el footer desde archivo externo
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                const footerContainer = document.createElement('div');
+                footerContainer.innerHTML = data;
+                document.body.appendChild(footerContainer);
+            })
+            .catch(error => {
+                console.error('Error cargando el footer:', error);
+                // Fallback por si no carga
+                document.body.insertAdjacentHTML('beforeend', `
+                    <footer class="main-footer">
+                        <div class="footer-content">
+                            <div class="footer-left">
+                                <strong>Sistema de Gestión de Préstamos de Equipos</strong> 
+                                <span class="footer-year">© 2026 Área de Sistemas</span>
+                            </div>
+                            <div class="footer-right">
+                                <span class="developer-signature">
+                                    Desarrollado por <strong>Jesús Castro Jaramillo</strong>
+                                </span>
+                                <span class="dev-role">— Desarrollador Full Stack</span>
+                            </div>
+                        </div>
+                    </footer>
+                `);
+            });
+    </script>
+
+</body>
+</html>
 
     <script src="js/api.js"></script>
     <script src="js/historial.js"></script>

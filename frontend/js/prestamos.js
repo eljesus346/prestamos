@@ -57,7 +57,6 @@ function renderizarTabla(prestamos) {
             ? new Date(p.fecha_devolucion_estimada + "T00:00:00").toLocaleDateString("es-CO")
             : "—";
 
-        // Código interno con fallback a serial
         const codigoEquipo = p.equipo_codigo_interno || p.equipo_serial || "—";
 
         const colFirmas = `
@@ -189,64 +188,138 @@ function filtrarPrestamos() {
 //  MODAL NUEVO PRÉSTAMO — lógica de tipos bloqueados
 // ══════════════════════════════════════════════════════
 
-// Guarda qué tipos ya tiene el usuario seleccionado
 let tiposBloqueados      = [];
-let _usuariosDisponibles = []; // lista completa de usuarios activos
+let _usuariosDisponibles = [];
 
 async function cargarSelects() {
-    // Cargar usuarios activos
     const resU     = await fetch(`${API_URL}/usuarios`);
     const usuarios = await resU.json();
 
-    // Guardar solo activos para poder filtrar después
     _usuariosDisponibles = usuarios.filter(u => u.estado);
 
     // Limpiar buscador al abrir el modal
     const buscador = document.getElementById("buscadorUsuario");
     if (buscador) buscador.value = "";
 
-    renderizarSelectUsuarios(_usuariosDisponibles);
-
     // Cargar equipos disponibles
     const resE    = await fetch(`${API_URL}/equipos/disponibles`);
     const equipos = await resE.json();
     window._equiposDisponibles = equipos;
 
-    // Renderizar todos por defecto (sin usuario seleccionado aún)
     renderizarSelectEquipos(equipos, []);
 }
 
-// Renderiza el select de usuarios con la lista recibida
-function renderizarSelectUsuarios(lista) {
-    const selU = document.getElementById("id_usuario");
-    selU.innerHTML = '<option value="">Selecciona un usuario...</option>';
-    lista.forEach(u => {
-        selU.innerHTML += `<option value="${u.id}">${u.nombre} — ${u.documento}</option>`;
-    });
+// ══════════════════════════════════════════════════════
+//  AUTOCOMPLETE USUARIO
+// ══════════════════════════════════════════════════════
+
+function mostrarDropdownUsuario() {
+    // Si ya hay un usuario seleccionado, no reabre el dropdown
+    if (document.getElementById("id_usuario").value) return;
+
+    const texto = document.getElementById("buscadorUsuario").value.toLowerCase();
+    const lista = texto
+        ? _usuariosDisponibles.filter(u =>
+              u.nombre.toLowerCase().includes(texto) ||
+              u.documento.toLowerCase().includes(texto))
+        : _usuariosDisponibles;
+
+    renderizarDropdown(lista);
 }
 
-// Filtra el select de usuarios según lo escrito en el buscador
 function filtrarUsuariosModal() {
-    const texto     = document.getElementById("buscadorUsuario").value.toLowerCase();
+    // Si había un usuario seleccionado, limpiarlo al empezar a escribir de nuevo
+    if (document.getElementById("id_usuario").value) {
+        document.getElementById("id_usuario").value = "";
+        const chip = document.getElementById("usuarioChip");
+        if (chip) chip.remove();
+        onUsuarioCambio();
+    }
+
+    const texto = document.getElementById("buscadorUsuario").value.toLowerCase();
     const filtrados = _usuariosDisponibles.filter(u =>
         u.nombre.toLowerCase().includes(texto) ||
         u.documento.toLowerCase().includes(texto)
     );
-    renderizarSelectUsuarios(filtrados);
 
-    // Si el usuario seleccionado ya no aparece en la lista filtrada, limpiar aviso
-    const selU = document.getElementById("id_usuario");
-    if (!selU.value) onUsuarioCambio();
+    renderizarDropdown(filtrados);
 }
 
-// Actualiza el select de equipos marcando/ocultando los bloqueados
+function renderizarDropdown(lista) {
+    const drop = document.getElementById("autocompleteUsuario");
+    drop.innerHTML = "";
+
+    if (lista.length === 0) {
+        drop.innerHTML = `<div class="ac-empty">Sin resultados para esa búsqueda</div>`;
+    } else {
+        lista.forEach(u => {
+            const item = document.createElement("div");
+            item.className = "autocomplete-item";
+            item.innerHTML = `
+                <div class="ac-nombre">${u.nombre}</div>
+                <div class="ac-doc">${u.documento}</div>`;
+            // mousedown en lugar de click para que no se pierda el foco antes del evento
+            item.addEventListener("mousedown", (e) => {
+                e.preventDefault();
+                seleccionarUsuario(u);
+            });
+            drop.appendChild(item);
+        });
+    }
+
+    drop.classList.add("visible");
+}
+
+function seleccionarUsuario(u) {
+    document.getElementById("id_usuario").value     = u.id;
+    document.getElementById("buscadorUsuario").value = u.nombre;
+
+    // Chip de confirmación debajo del input
+    const wrapper  = document.getElementById("buscadorUsuario").closest(".form-group");
+    const chipViejo = document.getElementById("usuarioChip");
+    if (chipViejo) chipViejo.remove();
+
+    const chip = document.createElement("div");
+    chip.id        = "usuarioChip";
+    chip.className = "usuario-chip";
+    chip.innerHTML = `
+        👤 <strong>${u.nombre}</strong>
+        <span class="text-muted" style="font-size:0.78rem">${u.documento}</span>
+        <span class="usuario-chip-remove" onclick="limpiarUsuario()" title="Cambiar usuario">✕</span>`;
+    wrapper.appendChild(chip);
+
+    cerrarDropdownUsuario();
+    onUsuarioCambio();
+}
+
+function limpiarUsuario() {
+    document.getElementById("id_usuario").value     = "";
+    document.getElementById("buscadorUsuario").value = "";
+    const chip = document.getElementById("usuarioChip");
+    if (chip) chip.remove();
+    document.getElementById("buscadorUsuario").focus();
+    onUsuarioCambio();
+}
+
+function cerrarDropdownUsuario() {
+    const drop = document.getElementById("autocompleteUsuario");
+    if (drop) drop.classList.remove("visible");
+}
+
+// Cierra el dropdown al hacer clic fuera del form-group
+document.addEventListener("click", (e) => {
+    if (!e.target.closest("#modalOverlay .form-group")) {
+        cerrarDropdownUsuario();
+    }
+});
+
+// ── EQUIPOS ───────────────────────────────────────────
 function renderizarSelectEquipos(equipos, bloqueados) {
     const selE = document.getElementById("id_equipo");
     const tiposBloq = bloqueados.map(b => b.tipo);
 
     selE.innerHTML = '<option value="">Selecciona un equipo...</option>';
 
-    // Agrupar: primero disponibles, luego bloqueados al final
     const disponibles   = equipos.filter(e => !tiposBloq.includes(e.tipo));
     const noDisponibles = equipos.filter(e =>  tiposBloq.includes(e.tipo));
 
@@ -277,18 +350,16 @@ function renderizarSelectEquipos(equipos, bloqueados) {
     }
 }
 
-// Se llama cuando el usuario cambia en el select
+// Se llama cuando el usuario cambia en el autocomplete
 async function onUsuarioCambio() {
     const idUsuario = document.getElementById("id_usuario").value;
     const avisoEl   = document.getElementById("avisoTiposBloqueados");
 
-    // Limpiar aviso previo
     avisoEl.style.display = "none";
     avisoEl.innerHTML = "";
     tiposBloqueados = [];
 
     if (!idUsuario) {
-        // Sin usuario: mostrar todos los equipos sin restricción
         renderizarSelectEquipos(window._equiposDisponibles || [], []);
         return;
     }
@@ -298,10 +369,8 @@ async function onUsuarioCambio() {
         const data = await res.json();
         tiposBloqueados = data.bloqueados || [];
 
-        // Actualizar el select de equipos
         renderizarSelectEquipos(window._equiposDisponibles || [], tiposBloqueados);
 
-        // Mostrar aviso visual si hay tipos bloqueados
         if (tiposBloqueados.length > 0) {
             const lista = tiposBloqueados
                 .map(b => {
@@ -316,7 +385,6 @@ async function onUsuarioCambio() {
             avisoEl.style.display = "flex";
         }
     } catch {
-        // Si falla, no bloqueamos nada — el backend igual lo valida
         renderizarSelectEquipos(window._equiposDisponibles || [], []);
     }
 }
@@ -325,7 +393,17 @@ async function onUsuarioCambio() {
 function abrirModal() {
     document.getElementById("formPrestamo").reset();
     document.getElementById("prestamoId").value = "";
+    document.getElementById("id_usuario").value  = "";
     tiposBloqueados = [];
+
+    // Limpiar chip de usuario si existe
+    const chip = document.getElementById("usuarioChip");
+    if (chip) chip.remove();
+
+    // Limpiar dropdown
+    cerrarDropdownUsuario();
+    const drop = document.getElementById("autocompleteUsuario");
+    if (drop) drop.innerHTML = "";
 
     // Limpiar aviso
     const avisoEl = document.getElementById("avisoTiposBloqueados");
@@ -338,6 +416,7 @@ function abrirModal() {
 
 function cerrarModal() {
     document.getElementById("modalOverlay").classList.remove("active");
+    cerrarDropdownUsuario();
 }
 
 // ── MODAL DEVOLUCIÓN ──────────────────────────────────
@@ -393,15 +472,22 @@ async function confirmarDevolucion() {
 document.getElementById("formPrestamo").addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // Validar que haya usuario seleccionado (hidden no dispara required nativo)
+    const idUsuario = parseInt(document.getElementById("id_usuario").value);
+    if (!idUsuario) {
+        toast("Por favor selecciona un usuario", "warning");
+        document.getElementById("buscadorUsuario").focus();
+        return;
+    }
+
     const firma = obtenerFirma();
     if (!firma) {
         toast("Por favor captura la firma del receptor", "warning");
         return;
     }
 
-    // Validación extra en frontend antes de enviar
+    // Validación extra: tipo bloqueado
     const idEquipo  = parseInt(document.getElementById("id_equipo").value);
-    const idUsuario = parseInt(document.getElementById("id_usuario").value);
     const equipoSel = (window._equiposDisponibles || []).find(e => e.id === idEquipo);
 
     if (equipoSel && tiposBloqueados.some(b => b.tipo === equipoSel.tipo)) {

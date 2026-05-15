@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Equipos | Sistema de Préstamos</title>
     <link rel="stylesheet" href="css/styles.css">
+    
 </head>
 <body>
 
@@ -21,9 +22,19 @@
 
     <div class="container">
 
+        <!-- ══ ENCABEZADO ══ -->
         <div class="page-header">
             <h1>💻 Gestión de Equipos</h1>
-            <button class="btn btn-primary" onclick="abrirModal()">+ Nuevo Equipo</button>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <button id="btnReporteEquipos"
+                        class="btn btn-secondary"
+                        onclick="descargarReporteEquipos()">
+                    📊 Reporte Diario (.xlsx)
+                </button>
+                <button class="btn btn-primary" onclick="abrirModal()">
+                    + Nuevo Equipo
+                </button>
+            </div>
         </div>
 
         <!-- FILTROS -->
@@ -94,8 +105,9 @@
         </div>
     </div>
 
+
     <!-- ══════════════════════════════════════════════
-         MODAL CREAR / EDITAR
+         MODAL CREAR / EDITAR EQUIPO
     ══════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
@@ -140,7 +152,7 @@
                                       placeholder="Estado del equipo, accesorios incluidos..."></textarea>
                         </div>
 
-                        <!-- ── FOTO DEL EQUIPO ── -->
+                        <!-- FOTO DEL EQUIPO -->
                         <div class="form-group" style="grid-column: span 2;">
                             <label>📷 Foto del equipo</label>
                             <div class="foto-upload-area"
@@ -178,9 +190,7 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════
-         MODAL VER FOTO EN GRANDE
-    ══════════════════════════════════════════════ -->
+    <!-- MODAL VER FOTO EN GRANDE -->
     <div class="modal-overlay" id="modalFotoEquipo">
         <div class="modal" style="max-width:480px">
             <div class="modal-header">
@@ -189,13 +199,392 @@
             </div>
             <div class="modal-body text-center">
                 <img id="fotoModalImg" src="" alt="Foto equipo"
-                     style="max-width:100%; border-radius:10px;
-                            box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+                     style="max-width:100%; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1)">
             </div>
         </div>
     </div>
 
+
+    <!-- ══════════════════════════════════════════════
+         MODAL MANTENIMIENTO (FORMULARIO)
+    ══════════════════════════════════════════════ -->
+    <div class="modal-mant-overlay" id="modalMantenimiento">
+        <div class="modal-mant">
+
+            <div class="modal-mant-header">
+                <div>
+                    <h2>🔧 Registro de Mantenimiento</h2>
+                    <p class="mant-subtitle" id="mantNombreEquipo">Equipo</p>
+                </div>
+                <button class="modal-mant-close" onclick="cerrarModalMantenimiento()">✕</button>
+            </div>
+
+            <div class="modal-mant-body">
+
+                <!-- DATOS DEL TICKET -->
+                <div class="mant-section">
+                    <div class="mant-section-title">📋 Datos Generales del Ticket</div>
+                    <div class="mant-section-body">
+                        <div class="mant-form-grid">
+                            <div class="mant-field">
+                                <label>N° Ticket (auto)</label>
+                                <input type="text" id="mantTicket" readonly>
+                            </div>
+                            <div class="mant-field">
+                                <label>Área que recibe el servicio</label>
+                                <input type="text" id="mantArea" placeholder="Laboratorio, Oficina...">
+                            </div>
+                            <div class="mant-field">
+                                <label>Fecha y hora de inicio *</label>
+                                <input type="datetime-local" id="mantFechaInicio">
+                            </div>
+                            <div class="mant-field">
+                                <label>Fecha y hora de cierre</label>
+                                <input type="datetime-local" id="mantFechaCierre">
+                            </div>
+                            <div class="mant-field">
+                                <label>Ejecuta *</label>
+                                <input type="text" id="mantEjecuta" placeholder="Nombre del técnico">
+                            </div>
+                            <div class="mant-field">
+                                <label>Cargo quien ejecuta</label>
+                                <input type="text" id="mantCargoEjecuta" placeholder="Técnico de soporte">
+                            </div>
+                            <div class="mant-field">
+                                <label>Verifica / Coordinador</label>
+                                <input type="text" id="mantVerifica" placeholder="Nombre del supervisor">
+                            </div>
+                            <div class="mant-field">
+                                <label>Cargo quien verifica</label>
+                                <input type="text" id="mantCargoVerifica" placeholder="Coordinador de área">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TIPO DE MANTENIMIENTO -->
+                <div class="mant-section">
+                    <div class="mant-section-title">🏷️ Tipo de Mantenimiento *</div>
+                    <div class="mant-section-body">
+                        <div class="tipo-mant-group">
+                            <label class="tipo-mant-option preventivo">
+                                <input type="radio" name="tipoMant" value="preventivo">
+                                ✅ Preventivo
+                            </label>
+                            <label class="tipo-mant-option correctivo">
+                                <input type="radio" name="tipoMant" value="correctivo">
+                                🔴 Correctivo
+                            </label>
+                            <label class="tipo-mant-option otro">
+                                <input type="radio" name="tipoMant" value="otro">
+                                🔧 Otro
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INFORMACIÓN DEL EQUIPO -->
+                <div class="mant-section">
+                    <div class="mant-section-title">💻 Información del Equipo</div>
+                    <div class="mant-section-body">
+                        <div class="mant-form-grid">
+                            <div class="mant-field">
+                                <label>Serial (automático)</label>
+                                <input type="text" id="mantSerial" readonly>
+                            </div>
+                            <div class="mant-field">
+                                <label>Modelo / Nombre (automático)</label>
+                                <input type="text" id="mantModelo" readonly>
+                            </div>
+                            <div class="mant-field">
+                                <label>Código interno (automático)</label>
+                                <input type="text" id="mantCodigo" readonly>
+                            </div>
+                            <div class="mant-field">
+                                <label>Ubicación</label>
+                                <input type="text" id="mantUbicacion" placeholder="Sede principal, Piso 2...">
+                            </div>
+                            <div class="mant-field">
+                                <label>Memoria RAM</label>
+                                <input type="text" id="mantRam" placeholder="8 GB DDR4">
+                            </div>
+                            <div class="mant-field">
+                                <label>Procesador</label>
+                                <input type="text" id="mantProcesador" placeholder="Intel i5-3330 @ 3.00GHz">
+                            </div>
+                            <div class="mant-field span-2">
+                                <label>Sistema Operativo</label>
+                                <input type="text" id="mantSo" placeholder="Windows 10 Pro">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHECKLIST DE ACTIVIDADES -->
+                <div class="mant-section">
+                    <div class="mant-section-title">✅ Checklist de Actividades</div>
+                    <div class="mant-section-body" style="padding:0; overflow-x:auto;">
+                        <table class="tabla" id="tablaChecklist">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:200px">Actividad</th>
+                                    <th style="width:100px">Se realizó</th>
+                                    <th style="min-width:140px">Resultado</th>
+                                    <th style="min-width:160px">Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-actividad="Limpieza interna (aire comprimido)">
+                                    <td>Limpieza interna (aire comprimido)</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Limpieza ventiladores">
+                                    <td>Limpieza ventiladores</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Cambio de pasta térmica CPU">
+                                    <td>Cambio de pasta térmica CPU</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Verificación memoria RAM">
+                                    <td>Verificación memoria RAM</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Chequeo disco duro (SMART)">
+                                    <td>Chequeo disco duro (SMART)</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Revisión de conexiones internas">
+                                    <td>Revisión de conexiones internas</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Prueba de encendido y arranque">
+                                    <td>Prueba de encendido y arranque</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Verificación de temperaturas">
+                                    <td>Verificación de temperaturas</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Optimización del sistema operativo">
+                                    <td>Optimización del sistema operativo</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                                <tr data-actividad="Cambio de pila BIOS (CR2032)">
+                                    <td>Cambio de pila BIOS (CR2032)</td>
+                                    <td>
+                                        <div class="chk-radio-group">
+                                            <label><input type="checkbox" class="check-si"> SI</label>
+                                            <label><input type="checkbox" class="check-no"> NO</label>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" class="check-resultado" placeholder="Resultado..."></td>
+                                    <td><input type="text" class="check-obs" placeholder="Obs..."></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TRABAJO REALIZADO Y OBSERVACIONES -->
+                <div class="mant-section">
+                    <div class="mant-section-title">📝 Trabajo Realizado y Observaciones</div>
+                    <div class="mant-section-body">
+                        <div class="mant-form-grid">
+                            <div class="mant-field span-2">
+                                <label>Causa / Descripción del trabajo realizado</label>
+                                <textarea id="mantTrabajoRealizado" rows="4"
+                                    placeholder="Describe detalladamente el trabajo realizado..."></textarea>
+                            </div>
+                            <div class="mant-field span-2">
+                                <label>Plan de mejora y optimización (si aplica)</label>
+                                <textarea id="mantPlanMejora" rows="3"
+                                    placeholder="Ej: Agregar RAM de 4GB, reemplazar HDD por SSD 500GB..."></textarea>
+                            </div>
+                            <div class="mant-field span-2">
+                                <label>Recursos utilizados</label>
+                                <textarea id="mantRecursos" rows="2"
+                                    placeholder="Sopladora, pasta térmica, CPU-Z, herramientas de diagnóstico..."></textarea>
+                            </div>
+                            <div class="mant-field span-2">
+                                <label>Observaciones generales</label>
+                                <textarea id="mantObsGenerales" rows="2"
+                                    placeholder="Otras observaciones relevantes..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EVIDENCIAS -->
+                <div class="mant-section">
+                    <div class="mant-section-title">📎 Evidencias Fotográficas y Documentos</div>
+                    <div class="mant-section-body">
+                        <div class="ev-upload-area"
+                             onclick="document.getElementById('evidenciasInput').click()">
+                            <input type="file" id="evidenciasInput"
+                                   multiple accept="image/*,.pdf,.doc,.docx"
+                                   style="display:none"
+                                   onchange="procesarEvidencias(event)">
+                            <span class="ev-upload-icon">📎</span>
+                            <span>Clic para adjuntar archivos</span>
+                            <span style="font-size:.8rem; margin-top:4px; color:#9ca3af">
+                                Imágenes, PDF, Word — máx. 5MB por archivo
+                            </span>
+                        </div>
+                        <div class="ev-galeria" id="galeriaEvidencias">
+                            <p class="ev-empty">Sin archivos adjuntos aún.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- fin modal-mant-body -->
+
+            <div class="modal-mant-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalMantenimiento()">
+                    Cancelar
+                </button>
+                <button class="btn btn-primary" onclick="guardarFormMantenimiento()">
+                    💾 Guardar Mantenimiento
+                </button>
+            </div>
+
+        </div><!-- fin modal-mant -->
+    </div><!-- fin overlay -->
+
+
+    <!-- ══════════════════════════════════════════════
+         MODAL HISTORIAL DE MANTENIMIENTO
+    ══════════════════════════════════════════════ -->
+    <div class="modal-mant-overlay" id="modalHistorialMant">
+        <div class="modal-mant" style="max-width:700px">
+
+            <div class="modal-mant-header" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6)">
+                <div>
+                    <h2>📋 Historial de Mantenimiento</h2>
+                    <p class="mant-subtitle" id="historialNombreEquipo">Equipo</p>
+                </div>
+                <button class="modal-mant-close" onclick="cerrarHistorialMantenimiento()">✕</button>
+            </div>
+
+            <div class="modal-mant-body">
+                <div id="historialLista">
+                    <div class="hist-empty">
+                        <span class="hist-empty-icon">🔧</span>
+                        <p>Cargando historial...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════
+         MODAL DETALLE DE UN MANTENIMIENTO
+    ══════════════════════════════════════════════ -->
+    <div class="modal-mant-overlay" id="modalDetalleMantenimiento">
+        <div class="modal-mant" style="max-width:750px">
+
+            <div class="modal-mant-header" style="background:linear-gradient(135deg,#0f766e,#14b8a6)">
+                <div>
+                    <h2>🔍 Detalle del Mantenimiento</h2>
+                    <p class="mant-subtitle">Información completa del registro</p>
+                </div>
+                <button class="modal-mant-close" onclick="cerrarDetalleMantenimiento()">✕</button>
+            </div>
+
+            <div class="modal-mant-body" id="detalleContenido">
+                <!-- Se rellena dinámicamente -->
+            </div>
+
+            <div class="modal-mant-footer">
+                <button class="btn btn-secondary" onclick="cerrarDetalleMantenimiento()">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- FOOTER PERSONALIZADO -->
+    <script>
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                const footerContainer = document.createElement('div');
+                footerContainer.innerHTML = data;
+                document.body.appendChild(footerContainer);
+            })
+            .catch(error => console.error('Error cargando footer:', error));
+    </script>
+
     <script src="js/api.js"></script>
     <script src="js/equipos.js"></script>
+    <script src="js/mantenimiento.js"></script>
+
 </body>
 </html>

@@ -65,6 +65,17 @@ function renderizarTabla(equipos) {
                         onclick="abrirEditar(${e.id})">✏️ Editar</button>
                 <button class="btn btn-sm btn-danger"
                         onclick="eliminar(${e.id})">🗑️ Eliminar</button>
+
+                <!-- ══ BOTONES MANTENIMIENTO ══ -->
+                <button class="btn-mant"
+                        onclick="abrirModalMantenimiento(${JSON.stringify(e).replace(/"/g, '&quot;')})">
+                    🔧 Mantenimiento
+                </button>
+                <button class="btn-hist-mant"
+                        onclick="abrirHistorialMantenimiento(${JSON.stringify(e).replace(/"/g, '&quot;')})">
+                    📋 Historial Mant.
+                </button>
+
                 <select class="select-estado"
                         onchange="cambiarEstadoEquipo(${e.id}, this.value)">
                     <option value="">Estado...</option>
@@ -132,7 +143,6 @@ async function abrirEditar(id) {
     document.getElementById("codigo_interno").value      = e.codigo_interno || "";
     document.getElementById("observaciones").value       = e.observaciones  || "";
 
-    // Cargar foto existente
     if (e.foto) {
         mostrarFotoPreview(e.foto);
     } else {
@@ -148,7 +158,6 @@ document.getElementById("formEquipo").addEventListener("submit", async (e) => {
 
     const id = document.getElementById("equipoId").value;
 
-    // Obtener foto base64
     const fotoPreview = document.getElementById("fotoPreview");
     const foto = fotoPreview.style.display !== "none" ? fotoPreview.src : null;
 
@@ -295,6 +304,40 @@ function verFotoEquipo(src, nombre) {
 
 function cerrarFotoModal() {
     document.getElementById("modalFotoEquipo").classList.remove("active");
+}
+
+// ── DESCARGAR REPORTE DIARIO EXCEL ───────────────────
+async function descargarReporteEquipos() {
+    const btn = document.getElementById("btnReporteEquipos");
+    const textoOriginal = btn.innerHTML;
+
+    btn.disabled  = true;
+    btn.innerHTML = "⏳ Generando...";
+
+    try {
+        const res = await fetch(`${API_URL}/excel/equipos/reporte-diario`);
+
+        if (!res.ok) throw new Error("Error al generar el reporte");
+
+        const blob  = await res.blob();
+        const url   = URL.createObjectURL(blob);
+        const a     = document.createElement("a");
+        const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+        a.href     = url;
+        a.download = `reporte_equipos_${fecha}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast("✅ Reporte descargado correctamente", "success");
+    } catch (error) {
+        toast("❌ Error al descargar el reporte: " + error.message, "error");
+    } finally {
+        btn.disabled  = false;
+        btn.innerHTML = textoOriginal;
+    }
 }
 
 // ── INICIAR ───────────────────────────────────────────
